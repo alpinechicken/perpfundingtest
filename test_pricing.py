@@ -1,3 +1,4 @@
+# %%
 import numpy as np
 from gbm import *
 from black_scholes import black_scholes
@@ -53,9 +54,43 @@ def test_everlasting_power_perp():
     assert np.abs(est - calced)/est < 0.05, (est, calced)
 
 
+def test_everlasting_power_perp2():
+    num_samples = 10000
+    spot = 2
+    rate = 0
+    time = 0.5
+    freq = 1/365
+    vol = 1.2
+    drift = 0.2
+    power = 2
+    
+    # GBM path
+    # Funding factor (perp form)
+    FF = 1/(2*np.exp( -freq* 0.5* (power-1) * (2 * rate + power * vol**2)) - 1)
+    # Funding factor (expiring form)
+    #FF = np.exp(freq* 0.5* (power - 1) * (2 * rate + power * vol**2))
+    # Price function
+    Minf = lambda S: S**power *FF
+
+    def simPerp(time):
+        # GBM path
+        S = liteGBM(S0=spot, mu=freq*rate, sigma=vol*np.sqrt(freq), T=np.floor(time/freq))
+        # Funding path (Mark - Index)
+        d = [Minf(s)-s**2 for s in S[1:]]
+        # Total cash for long power perp (cost - funding + sale) 
+        return -Minf(spot) - np.sum(d) + Minf(S[-1])
+
+    total_return = [simPerp(time) for _ in range(num_samples)]
+    assert np.abs(np.mean(total_return/Minf(spot))) < 0.01
 
 if __name__ == "__main__":
     test_everlasting_power_perp()
+    # Test along paths
+    test_everlasting_power_perp2()
 
     for period in range(1,100):
         print((period,everlasting_power_perp_price(2,1/period,1.2,0,3)))
+
+# %%
+test_everlasting_power_perp2()
+# %%
