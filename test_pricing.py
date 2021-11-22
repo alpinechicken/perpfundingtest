@@ -1,4 +1,3 @@
-# %%
 import numpy as np
 from gbm import *
 from black_scholes import black_scholes
@@ -90,7 +89,3 @@ if __name__ == "__main__":
 
     for period in range(1,100):
         print((period,everlasting_power_perp_price(2,1/period,1.2,0,3)))
-
-# %%
-test_everlasting_power_perp2()
-# %%
